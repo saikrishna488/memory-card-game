@@ -3,7 +3,7 @@
         <div class="card-inner w-full h-full transition-transform duraion-500 transform-style-3d"
              :class="{ 'rotate-y-180': isFlipped }">
             <!-- Card Back (face down) -->
-             <div class="card-face absolute w-full h-full backface-hidden bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-lg flex items-center justify-center">
+             <div class="card-face absolute w-full h-full backface-hidden bg-gradient-to-br from-slate-950 to-purple-600 rounded-lg shadow-lg flex items-center justify-center">
                 <span class="text-4xl">🎴</span>
              </div>
 
