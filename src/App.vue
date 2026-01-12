@@ -6,12 +6,13 @@
       <!-- Game stats -->
        <div class="bg-white rounded-lg px-6 py-3 mb-6 shadow-lg">
         <p class="text-lg font-semibold text-gray-700">Moves: {{ moves }}</p>
+        <p class="text-lg font-semibold text-gray-700">Time: {{ formattedTime }}</p>
        </div>
 
        <!-- Win Message -->
-        <div v-if="isGameWon" class="bg-gree-500 text-white px-8 py-4 rounded-lg mb-4 shadow-lg animate-bounce">
+        <div v-if="isGameWon" class="bg-green-500 text-white px-8 py-4 rounded-lg mb-4 shadow-lg animate-bounce">
           <p class="text-2xl font-bold">🎊 You Won! 🎊</p>
-          <p class="text-lg">Moves: {{ moves }}</p>
+          <p class="text-lg">Moves: {{ moves }} | Time: {{ formattedTime }}</p>
         </div>
 
       <!-- Grid of cards -->
@@ -34,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import Card from './components/Card.vue'
 
 //Typescript interface for my card data
@@ -51,6 +52,8 @@ const cards = ref<CardType[]>([])
 const flippedCards = ref<CardType[]>([])
 const moves = ref(0)
 const isChecking = ref(false)
+const timer = ref(0)
+const timerInterval = ref<ReturnType<typeof setInterval> | null>(null)
 
 //Emojis on card
 const emojis = ['☀️', '🌙', '⭐', '🍀', '💎', '🍒', '🍄‍🟫', '💥']
@@ -59,6 +62,32 @@ const emojis = ['☀️', '🌙', '⭐', '🍀', '💎', '🍒', '🍄‍🟫', 
 const isGameWon = computed(() => {
   return cards.value.length > 0 && cards.value.every(card => card.isMatched)
 })
+
+//fomat time to mm:ss
+  const formattedTime = computed(() => {
+    const minutes = Math.floor(timer.value / 60)
+    const seconds = timer.value % 60
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  })
+
+  // start timer
+  const startTimer = (): void => {
+    if (timerInterval.value) {
+      clearInterval(timerInterval.value)
+    }
+    timer.value = 0
+    timerInterval.value = setInterval(() => {
+      timer.value++
+    }, 1000)
+  }
+
+  //stop timer
+  const stopTimer = (): void => {
+    if (timerInterval.value) {
+      clearInterval(timerInterval.value)
+      timerInterval.value = null
+    }
+  }
 
 // Initialize/Shuffle
 const InitializeGame = () => {
@@ -83,6 +112,7 @@ for (let i = cardPairs.length - 1; i > 0; i--) {
 cards.value = cardPairs
 flippedCards.value = []
 moves.value = 0
+timer.value = 0
 }
 
 //Handle card flip
@@ -95,6 +125,11 @@ const handleFlip = (id: number): void => {
 
   const card = cards.value.find((c: CardType) => c.id === id)
   if (!card || card.isMatched || card.isFlipped) return
+
+  // start timer on first flip
+  if (timer.value === 0 && !timerInterval.value) {
+    startTimer()
+  }
 
   // flip card
   card.isFlipped = true
@@ -123,6 +158,10 @@ const checkForMatch = (): void => {
     card2.isMatched = true
     flippedCards.value = []
     isChecking.value = false
+    //check if u won and stop timer
+    if (cards.value.every(card => card.isMatched)) {
+      stopTimer()
+    }
   } else {
     //no match - flips back
     setTimeout(() => {
@@ -136,10 +175,15 @@ const checkForMatch = (): void => {
 
 // restart
 const restartGame = (): void => {
+  stopTimer()
   InitializeGame()
 }
 
+//cleanup timer when component unmounts
+onUnmounted(() => {
+  stopTimer()
+})
+
 //initialize on mount
 InitializeGame()
-
 </script>
