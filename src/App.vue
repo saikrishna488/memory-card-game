@@ -23,6 +23,7 @@
            :id="card.id"
            :emoji="card.emoji"
            :isFlipped="card.isFlipped || card.isMatched"
+           :isShaking="card.isShaking"
            @flip="handleFlip"
            />
        </div>
@@ -45,6 +46,7 @@ interface CardType {
   pairId: number // to match
   isFlipped: boolean
   isMatched: boolean
+  isShaking: boolean
 }
 
 // Game state
@@ -96,8 +98,8 @@ const InitializeGame = () => {
   // Create pairs
   emojis.forEach((emoji, index) => {
     cardPairs.push(
-      { id: index * 2, emoji, pairId: index , isFlipped: false, isMatched: false },
-      { id: index * 2 + 1, emoji, pairId: index, isFlipped: false, isMatched: false }
+      { id: index * 2, emoji, pairId: index , isFlipped: false, isMatched: false, isShaking: false },
+      { id: index * 2 + 1, emoji, pairId: index, isFlipped: false, isMatched: false, isShaking: false }
     )
   })
 
@@ -163,8 +165,13 @@ const checkForMatch = (): void => {
       stopTimer()
     }
   } else {
-    //no match - flips back
+    //no match - flips back after shake
+    card1.isShaking = true
+    card2.isShaking = true
+
     setTimeout(() => {
+      card1.isShaking = false
+      card2.isShaking = false
       card1.isFlipped = false
       card2.isFlipped = false
       flippedCards.value = []
