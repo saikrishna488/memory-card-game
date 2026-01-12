@@ -28,9 +28,9 @@
            />
        </div>
 
-       <!-- Restart Button -->
-        <button @click="restartGame" class="bg-white text-purple-700 font-bold py-8 rounded-lg shadow-lg hover: bg-gray-100 transition-colors">
-          Restart Game
+       <!-- new game Button -->
+        <button @click="newGame" class="bg-white text-purple-700 font-bold py-3 px-8 rounded-lg shadow-lg hover: bg-gray-100 hover:scale-105 transition-all duration-200">
+          New Game
         </button>
   </div>
 </template>
@@ -181,7 +181,7 @@ const checkForMatch = (): void => {
 }
 
 // restart
-const restartGame = (): void => {
+const newGame = (): void => {
   stopTimer()
   InitializeGame()
 }
