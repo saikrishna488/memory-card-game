@@ -14,6 +14,8 @@
           <p class="text-2xl font-bold">🎊 You Won! 🎊</p>
           <p class="text-lg">Moves: {{ moves }} | Time: {{ formattedTime }}</p>
         </div>
+        <!-- Confetti animation -->
+         <Confetti v-if="isGameWon" />
 
       <!-- Grid of cards -->
        <div class="gri grid-cols-4 gap-4 mb-6" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
@@ -38,6 +40,7 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue'
 import Card from './components/Card.vue'
+import Confetti from './components/Confetti.vue'
 
 //Typescript interface for my card data
 interface CardType {
