@@ -3,6 +3,34 @@
       <h1 class="text-5xl font-bold mb-8 text-white">Memory Card Game</h1>
       <p class="text-xl text-white">Match pairs of cards to win!</p>
 
+      <!-- Difficulty selector -->
+       <div class="bg-white rounded-lg px-6 py-3 mb-4 shadow-lg">
+        <p class="text-sm font-semibold text-gray-600 mb-2 text-center">Difficulty</p>
+        <div class="flex gap-2">
+          <button 
+            @click="changeDifficulty('easy')"
+            :class="['px-4 py-2 rounded-lg font-semibold transition-all',
+              difficulty === 'easy'
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            ]">Easy</button>
+            <button
+              @click="changeDifficulty('medium')"
+              :class="['px-4 py-2 rounded-lg font-semibold transition-all',
+                difficulty === 'medium'
+                  ? 'bg-yellow-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ]">Medium</button>
+              <button
+              @click="changeDifficulty('hard')"
+              :class="['px-4 py-2 rounded-lg font-semibold transition-all',
+                difficulty === 'hard'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ]">Hard</button>
+        </div>
+       </div>
+
       <!-- Game stats -->
        <div class="bg-white rounded-lg px-6 py-3 mb-6 shadow-lg">
         <p class="text-lg font-semibold text-gray-700">Moves: {{ moves }}</p>
@@ -17,8 +45,8 @@
         <!-- Confetti animation -->
          <Confetti v-if="isGameWon" />
 
-      <!-- Grid of cards -->
-       <div class="gri grid-cols-4 gap-4 mb-6" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+      <!-- Grid of cards - dynamic columns -->
+       <div class="grid gap-4 mb-6" :style="{display: 'grid', gridTemplateColumns: `repeat(${gridCols}, 1fr)`, gap: '1rem'}">
         <Card
            v-for="card in cards"
            :key="card.id"
@@ -59,9 +87,11 @@ const moves = ref(0)
 const isChecking = ref(false)
 const timer = ref(0)
 const timerInterval = ref<ReturnType<typeof setInterval> | null>(null)
+  type Difficulty = 'easy' | 'medium' |'hard'
+  const difficulty = ref<Difficulty>('medium')
 
 //Emojis on card
-const emojis = ['☀️', '🌙', '⭐', '🍀', '💎', '🍒', '🍄‍🟫', '💥']
+const allEmojis = ['☀️', '🌙', '⭐', '🍀', '💎', '🍒', '🍄‍🟫', '💥', '🐦‍🔥', '👾', '🪼', '🖤']
 
 // Computed property: checking if u won
 const isGameWon = computed(() => {
@@ -94,12 +124,29 @@ const isGameWon = computed(() => {
     }
   }
 
+  //get grid size based on difficulty
+  const getGridConfig = (diff: Difficulty) => {
+    switch (diff) {
+      case 'easy':
+        return { pairs: 6, cols: 4, rows: 3 }
+      case 'medium':
+        return { pairs: 8, cols: 4, rows: 4 }
+      case 'hard':
+        return { pairs: 12, cols: 6, rows: 4 }
+    }
+  }
+
+  // computed property for grid columns
+  const gridCols = computed(() => getGridConfig(difficulty.value).cols)
+
 // Initialize/Shuffle
-const InitializeGame = () => {
+const InitializeGame = (): void => {
   const cardPairs: CardType[] = []
+  const config = getGridConfig(difficulty.value)
+  const emojisToUse: string[] = allEmojis.slice(0, config.pairs)
 
   // Create pairs
-  emojis.forEach((emoji, index) => {
+  emojisToUse.forEach((emoji: string, index: number) => {
     cardPairs.push(
       { id: index * 2, emoji, pairId: index , isFlipped: false, isMatched: false, isShaking: false },
       { id: index * 2 + 1, emoji, pairId: index, isFlipped: false, isMatched: false, isShaking: false }
@@ -181,6 +228,13 @@ const checkForMatch = (): void => {
       isChecking.value = false
     }, 1000)
   }
+}
+
+//change difficulty
+const changeDifficulty = (newDifficulty: Difficulty): void => {
+  difficulty.value = newDifficulty
+  stopTimer()
+  InitializeGame()
 }
 
 // restart
