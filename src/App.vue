@@ -4,7 +4,7 @@
       <p class="text-xl text-white">Match pairs of cards to win!</p>
 
       <!-- Difficulty selector -->
-       <div class="bg-white rounded-lg px-6 py-3 mb-4 shadow-lg">
+       <div class="bg-white rounded-lg px-6 py-3 mb-6 shadow-lg">
         <p class="text-sm font-semibold text-gray-600 mb-2 text-center">Difficulty</p>
         <div class="flex gap-2">
           <button 
@@ -31,14 +31,29 @@
         </div>
        </div>
 
+       <!-- Best score display -->
+        <div v-if="getBestScore" class="bg-white rounded-lg px-6 py-3 mb-6 shadow-lg">
+          <p class="text-sm font-semibold text-gray-600 mb-1 text-center">Your Best on {{ difficulty }}</p>
+          <p class="text-lg font-bold text-purple-600 text-center">
+            {{ getBestScore.moves }} moves in {{ Math.floor(getBestScore.time / 60) }}:{{ (getBestScore.time % 60).toString().padStart(2, '0') }}
+          </p>
+        </div>
+
+        <!-- Leaderboard Button -->
+         <button
+           @click="toggleLeaderboard"
+           class="bg-white text-purple-600 font-semibold py-2 px-6 rounded-lg shadow-lg hover:bg-gray-100 transition-all mb-6">
+           View Leaderboard
+        </button>
+
       <!-- Game stats -->
-       <div class="bg-white rounded-lg px-6 py-3 mb-6 shadow-lg">
+       <div class="bg-white rounded-lg px-6 py-3 mb-6 shadow-lg flex gap-8">
         <p class="text-lg font-semibold text-gray-700">Moves: {{ moves }}</p>
         <p class="text-lg font-semibold text-gray-700">Time: {{ formattedTime }}</p>
        </div>
 
        <!-- Win Message -->
-        <div v-if="isGameWon" class="bg-green-500 text-white px-8 py-4 rounded-lg mb-4 shadow-lg animate-bounce">
+        <div v-if="isGameWon" class="bg-green-500 text-white px-8 py-4 rounded-lg mb-6 shadow-lg animate-bounce">
           <p class="text-2xl font-bold">🎊 You Won! 🎊</p>
           <p class="text-lg">Moves: {{ moves }} | Time: {{ formattedTime }}</p>
         </div>
@@ -62,7 +77,61 @@
         <button @click="newGame" class="bg-white text-purple-700 font-bold py-3 px-8 rounded-lg shadow-lg hover: bg-gray-100 hover:scale-105 transition-all duration-200">
           New Game
         </button>
+
+        <!-- Leaderboard Modal -->
+         <div v-if="showLeaderboard" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click="toggleLeaderboard">
+          <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto" @click.stop>
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-3xl font-bold text-purple-600">🏆</h2>
+              <button @click="toggleLeaderboard" class="text-gray-500 hover:text-gray-700 text-2xl">
+                ✕
+              </button>
+            </div>
+
+            <!-- Easy -->
+             <div class="mb-6">
+              <h3 class="text-xl font-bold text-green-600 mb-2">Easy (3x4)</h3>
+              <div v-if="leaderboard.filter(e => e.difficulty === 'easy').length > 0" class="space-y-2">
+                <div v-for="(entry, index) in leaderboard.filter(e => e.difficulty === 'easy')"
+                :key="index"
+                class="bg-gray-100 rounded-lg p-3 flex justify-between items-center">
+                <span class="font-semibold text-gray-700">{{ index + 1 }}. {{ entry.date }}</span>
+                <span class="text-gray-600">{{ entry.moves }} moves | {{ Math.floor(entry.time / 60) }}:{{ (entry.time % 60).toString().padStart(2, '0') }}</span>
+              </div>
+             </div>
+             <p v-else class="text-gray-500 italic">No Scores yet</p>
+          </div>
+
+          <!-- Medium -->
+           <div class="mb-6">
+            <h3 class="text-xl font-bold text-yellow-600 mb-2">Medium (4x4)</h3>
+            <div v-if="leaderboard.filter(e => e.difficulty === 'medium').length > 0" class="space-y-2">
+              <div v-for="(entry, index) in leaderboard.filter(e => e.difficulty === 'medium')"
+              :key="index"
+              class="bg-gray-100 rounded-lg p-3 flex justify-between items-center">
+              <span class="font-semibold text-gray-700">{{ index + 1 }}. {{ entry.date }}</span>
+              <span class="text-gray-600">{{ entry.moves }} moves | {{ Math.floor(entry.time / 60) }}:{{ (entry.time % 60).toString().padStart(2, '0') }}</span>
+            </div>
+           </div>
+           <p v-else class="text-gray-500 italic">No Scores yet</p>
+         </div>
+
+         <!-- Hard -->
+           <div class="mb-6">
+            <h3 class="text-xl font-bold text-red-600 mb-2">Hard (4x6)</h3>
+            <div v-if="leaderboard.filter(e => e.difficulty === 'hard').length > 0" class="space-y-2">
+              <div v-for="(entry, index) in leaderboard.filter(e => e.difficulty === 'hard')"
+              :key="index"
+              class="bg-gray-100 rounded-lg p-3 flex justify-between items-center">
+              <span class="font-semibold text-gray-700">{{ index + 1 }}. {{ entry.date }}</span>
+              <span class="text-gray-600">{{ entry.moves }} moves | {{ Math.floor(entry.time / 60) }}:{{ (entry.time % 60).toString().padStart(2, '0') }}</span>
+            </div>
+           </div>
+           <p v-else class="text-gray-500 italic">No Scores yet</p>
+         </div>
+      </div>
   </div>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -79,6 +148,13 @@ interface CardType {
   isMatched: boolean
   isShaking: boolean
 }
+//leaderboard entry type
+interface LeaderboardEntry {
+  difficulty: Difficulty
+  moves: number
+  time: number
+  date: string
+}
 
 // Game state
 const cards = ref<CardType[]>([])
@@ -89,6 +165,8 @@ const timer = ref(0)
 const timerInterval = ref<ReturnType<typeof setInterval> | null>(null)
   type Difficulty = 'easy' | 'medium' |'hard'
   const difficulty = ref<Difficulty>('medium')
+    const leaderboard = ref<LeaderboardEntry[]>([])
+    const showLeaderboard = ref(false)
 
 //Emojis on card
 const allEmojis = ['☀️', '🌙', '⭐', '🍀', '💎', '🍒', '🍄‍🟫', '💥', '🐦‍🔥', '👾', '🪼', '🖤']
@@ -213,6 +291,13 @@ const checkForMatch = (): void => {
     //check if u won and stop timer
     if (cards.value.every(card => card.isMatched)) {
       stopTimer()
+
+      addToLeaderboard({
+        difficulty: difficulty.value,
+        moves: moves.value,
+        time: timer.value,
+        date: new Date().toLocaleDateString()
+      })
     }
   } else {
     //no match - flips back after shake
@@ -228,6 +313,54 @@ const checkForMatch = (): void => {
       isChecking.value = false
     }, 1000)
   }
+}
+
+//load leaderboard from local storage
+const loadLeaderBoard = (): void => {
+  const saved = localStorage.getItem('memoryGameLeaderboard')
+  if (saved) {
+    leaderboard.value = JSON.parse(saved)
+  }
+}
+
+//save leaderboard to local storage
+const saveLeaderboard = (): void => {
+  localStorage.setItem('memoryGameLeaderboard', JSON.stringify(leaderboard.value))
+}
+
+//add entry to leaderboard
+const addToLeaderboard = (entry: LeaderboardEntry): void => {
+  leaderboard.value.push(entry)
+  //SORT BY TIME, THEN MOves
+  leaderboard.value.sort((a, b) => {
+    if (a.difficulty !== b.difficulty) return 0
+    if (a.time !== b.time) return a.time - b.time
+    return a.moves - b.moves
+  })
+  //keep only top 5 for each difficulty 
+  const byDifficulty: Record<Difficulty, LeaderboardEntry[]> = {
+    easy: [],
+    medium: [],
+    hard: []
+  }
+  leaderboard.value.forEach(entry => {
+    if (byDifficulty[entry.difficulty].length < 5) {
+      byDifficulty[entry.difficulty].push(entry)
+    }
+  })
+  leaderboard.value = [...byDifficulty.easy, ...byDifficulty.medium, ...byDifficulty.hard]
+  saveLeaderboard()
+}
+
+//get best score for current difficulty
+const getBestScore = computed(() => {
+  const scores = leaderboard.value.filter(entry => entry.difficulty === difficulty.value)
+  return scores.length > 0 ? scores[0] : null
+})
+
+//toggle leaderboard visibility
+const toggleLeaderboard = (): void => {
+  showLeaderboard.value = !showLeaderboard.value
 }
 
 //change difficulty
@@ -247,6 +380,9 @@ const newGame = (): void => {
 onUnmounted(() => {
   stopTimer()
 })
+
+//load board when component mounts
+loadLeaderBoard()
 
 //initialize on mount
 InitializeGame()
