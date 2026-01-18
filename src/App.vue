@@ -1,135 +1,200 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-pink-600 to-slate-950 flex flex-col items-center justify-center p-4">
-      <h1 class="text-5xl font-bold mb-8 text-white">Memory Card Game</h1>
-      <p class="text-xl text-white">Match pairs of cards to win!</p>
+  <div class="min-h-screen bg-gradient-to-br from-pink-600 to-slate-950 flex items-center justify-center p-8">
+    <!-- Main container with sidebar layout -->
+     <div class="flex gap-8 w-full max-w-7xl">
 
-      <!-- Difficulty selector -->
-       <div class="bg-white rounded-lg px-6 py-3 mb-6 shadow-lg">
-        <p class="text-sm font-semibold text-gray-600 mb-2 text-center">Difficulty</p>
-        <div class="flex gap-2">
-          <button 
-            @click="changeDifficulty('easy')"
-            :class="['px-4 py-2 rounded-lg font-semibold transition-all',
-              difficulty === 'easy'
-                ? 'bg-green-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            ]">Easy</button>
-            <button
-              @click="changeDifficulty('medium')"
-              :class="['px-4 py-2 rounded-lg font-semibold transition-all',
-                difficulty === 'medium'
+      <!-- left sidebar - Stats & controls -->
+       <div class="flex flex-col gap-4 w-80">
+        <!-- Title -->
+         <div class="bg-black rounded-lg p-6 shadow-lg">
+          <h1 class="text-3xl font-bold text-violet-200 text-center">Memory Game</h1>
+         </div>
+
+         <!-- Difficulty selector -->
+          <div class="bg-white rounded-lg p-6 shadow-lg">
+            <p class="text-sm font-semibold text-gray-600 mb-3">Difficulty</p>
+            <div class="flex flex-col gap-2">
+              <button
+                @click="changeDifficulty('easy')"
+                :class="[
+                  'px-4 py-2 rounded-lg font-semibold transition-all',
+                  difficulty === 'easy'
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ]">Easy (3x4)</button>
+                <button
+                @click="changeDifficulty('medium')"
+                :class="[
+                  'px-4 py-2 rounded-lg font-semibold transition-all',
+                  difficulty === 'medium'
                   ? 'bg-yellow-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              ]">Medium</button>
-              <button
-              @click="changeDifficulty('hard')"
-              :class="['px-4 py-2 rounded-lg font-semibold transition-all',
-                difficulty === 'hard'
+                ]">Medium (4x4)</button>
+                <button
+                @click="changeDifficulty('hard')"
+                :class="[
+                  'px-4 py-2 rounded-lg font-semibold transition-all',
+                  difficulty === 'hard'
                   ? 'bg-red-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              ]">Hard</button>
-        </div>
-       </div>
-
-       <!-- Best score display -->
-        <div v-if="getBestScore" class="bg-white rounded-lg px-6 py-3 mb-6 shadow-lg">
-          <p class="text-sm font-semibold text-gray-600 mb-1 text-center">Your Best on {{ difficulty }}</p>
-          <p class="text-lg font-bold text-purple-600 text-center">
-            {{ getBestScore.moves }} moves in {{ Math.floor(getBestScore.time / 60) }}:{{ (getBestScore.time % 60).toString().padStart(2, '0') }}
-          </p>
-        </div>
-
-        <!-- Leaderboard Button -->
-         <button
-           @click="toggleLeaderboard"
-           class="bg-white text-purple-600 font-semibold py-2 px-6 rounded-lg shadow-lg hover:bg-gray-100 transition-all mb-6">
-           View Leaderboard
-        </button>
-
-      <!-- Game stats -->
-       <div class="bg-white rounded-lg px-6 py-3 mb-6 shadow-lg flex gap-8">
-        <p class="text-lg font-semibold text-gray-700">Moves: {{ moves }}</p>
-        <p class="text-lg font-semibold text-gray-700">Time: {{ formattedTime }}</p>
-       </div>
-
-       <!-- Win Message -->
-        <div v-if="isGameWon" class="bg-green-500 text-white px-8 py-4 rounded-lg mb-6 shadow-lg animate-bounce">
-          <p class="text-2xl font-bold">🎊 You Won! 🎊</p>
-          <p class="text-lg">Moves: {{ moves }} | Time: {{ formattedTime }}</p>
-        </div>
-        <!-- Confetti animation -->
-         <Confetti v-if="isGameWon" />
-
-      <!-- Grid of cards - dynamic columns -->
-       <div class="grid gap-4 mb-6" :style="{display: 'grid', gridTemplateColumns: `repeat(${gridCols}, 1fr)`, gap: '1rem'}">
-        <Card
-           v-for="card in cards"
-           :key="card.id"
-           :id="card.id"
-           :emoji="card.emoji"
-           :isFlipped="card.isFlipped || card.isMatched"
-           :isShaking="card.isShaking"
-           @flip="handleFlip"
-           />
-       </div>
-
-       <!-- new game Button -->
-        <button @click="newGame" class="bg-white text-purple-700 font-bold py-3 px-8 rounded-lg shadow-lg hover: bg-gray-100 hover:scale-105 transition-all duration-200">
-          New Game
-        </button>
-
-        <!-- Leaderboard Modal -->
-         <div v-if="showLeaderboard" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click="toggleLeaderboard">
-          <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto" @click.stop>
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-3xl font-bold text-purple-600">🏆</h2>
-              <button @click="toggleLeaderboard" class="text-gray-500 hover:text-gray-700 text-2xl">
-                ✕
-              </button>
+                ]">Hard (4x6)</button>
             </div>
-
-            <!-- Easy -->
-             <div class="mb-6">
-              <h3 class="text-xl font-bold text-green-600 mb-2">Easy (3x4)</h3>
-              <div v-if="leaderboard.filter(e => e.difficulty === 'easy').length > 0" class="space-y-2">
-                <div v-for="(entry, index) in leaderboard.filter(e => e.difficulty === 'easy')"
-                :key="index"
-                class="bg-gray-100 rounded-lg p-3 flex justify-between items-center">
-                <span class="font-semibold text-gray-700">{{ index + 1 }}. {{ entry.date }}</span>
-                <span class="text-gray-600">{{ entry.moves }} moves | {{ Math.floor(entry.time / 60) }}:{{ (entry.time % 60).toString().padStart(2, '0') }}</span>
-              </div>
-             </div>
-             <p v-else class="text-gray-500 italic">No Scores yet</p>
           </div>
 
-          <!-- Medium -->
-           <div class="mb-6">
-            <h3 class="text-xl font-bold text-yellow-600 mb-2">Medium (4x4)</h3>
-            <div v-if="leaderboard.filter(e => e.difficulty === 'medium').length > 0" class="space-y-2">
-              <div v-for="(entry, index) in leaderboard.filter(e => e.difficulty === 'medium')"
-              :key="index"
-              class="bg-gray-100 rounded-lg p-3 flex justify-between items-center">
-              <span class="font-semibold text-gray-700">{{ index + 1 }}. {{ entry.date }}</span>
-              <span class="text-gray-600">{{ entry.moves }} moves | {{ Math.floor(entry.time / 60) }}:{{ (entry.time % 60).toString().padStart(2, '0') }}</span>
+          <!-- Current Game stats -->
+           <div class="bg-white rounded-lg p-6 shadow-lg">
+            <p class="text-sm font-semibold text-gray-600 mb-3">Current Game</p>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-gray-700">Moves:</span>
+                <span class="font-bold text-purple-600 text-xl">{{ moves }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-700">Time:</span>
+                <span class="font-bold text-purple-600 text-xl">{{ formattedTime }}</span>
+              </div>
             </div>
            </div>
-           <p v-else class="text-gray-500 italic">No Scores yet</p>
+
+           <!-- Best score -->
+            <div v-if="getBestScore" class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg p-6 shadow-lg text-white">
+              <p class="text-sm font-semibold mb-2">🏆 Your Best 🏆</p>
+              <div class="space-y-1">
+                <p class="text-lg font-bold">{{ getBestScore.moves }} moves</p>
+                <p class="text-lg font-bold">{{ Math.floor(getBestScore.time / 60) }}:{{ (getBestScore.time % 60).toString().padStart(2, '0') }}</p>
+                <p class="text-xl opacity-90 mt-2">{{ getBestScore.date }} at {{ getBestScore.timeOfDay }}</p>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+             <button
+              @click="newGame"
+              class="bg-black text-violet-200 font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-gray-100 hover:scale-105 transition-all duration-200">
+            New Game</button>
+            <button
+              @click="toggleLeaderboard"
+              class="bg-purple-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-purple-700 transition-all">
+            Leaderboard</button>
+      </div>
+
+      <!-- Center - Gameboard -->
+       <div class="flex-1 flex flex-col items-center justify-center">
+        <!-- win msg -->
+         <div v-if="isGameWon" class="bg-green-500 text-white px-8 py-4 rounded-lg mb-6 shadow-lg animate-bounce">
+          <p class="text-3xl font-bold text-center">🎊 You Won! 🎊</p>
+          <p class="text-xl text-center mt-2">{{ moves }} moves in {{ formattedTime }}</p>
          </div>
 
-         <!-- Hard -->
-           <div class="mb-6">
-            <h3 class="text-xl font-bold text-red-600 mb-2">Hard (4x6)</h3>
-            <div v-if="leaderboard.filter(e => e.difficulty === 'hard').length > 0" class="space-y-2">
-              <div v-for="(entry, index) in leaderboard.filter(e => e.difficulty === 'hard')"
-              :key="index"
-              class="bg-gray-100 rounded-lg p-3 flex justify-between items-center">
-              <span class="font-semibold text-gray-700">{{ index + 1 }}. {{ entry.date }}</span>
-              <span class="text-gray-600">{{ entry.moves }} moves | {{ Math.floor(entry.time / 60) }}:{{ (entry.time % 60).toString().padStart(2, '0') }}</span>
+         <!-- confetti animation -->
+          <Confetti v-if="isGameWon" />
+
+          <!-- Grid of cards -->
+           <div
+            class="grid gap-4"
+            :style="{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+              gap: '1rem'
+            }">
+            <Card
+              v-for="card in cards"
+              :key="card.id"
+              :id="card.id"
+              :emoji="card.emoji"
+              :isFlipped="card.isFlipped"
+              :isShaking="card.isShaking"
+              @flip="handleFlip"
+              />
             </div>
-           </div>
-           <p v-else class="text-gray-500 italic">No Scores yet</p>
-         </div>
+       </div>
+  </div>
+
+  <!-- leaderboard Modal -->
+   <div
+    v-if="showLeaderboard"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center jusify-center p-4 z-50"
+    @click="toggleLeaderboard">
+    <div
+      class="bg-white rounded-lg p-8 max-w-3xl w-full max-h-[85vh] overflow-y-auto"
+      @click.stop>
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-4xl font-bold text-purple-600">🏆</h2>
+        <button
+          @click="toggleLeaderboard"
+          class="text-gray-500 hover:text-gray-700 text-3xl font-bold">
+          ×
+        </button>
       </div>
+
+      <!-- easy -->
+       <div class="mb-8">
+        <h3 class="text-2xl font-bold text-green-600 mb-3">Easy (3x4)</h3>
+        <div v-if="leaderboard.filter(e => e.difficulty === 'easy').length > 0" class="space-y-2">
+          <div
+            v-for="(entry, index) in leaderboard.filter(e => e.difficulty === 'easy')"
+            :key="index"
+            class="bg-gray-100 rounded-lg p-4 flex justify-between items-center hover:bg-gray-200 transition-colors">
+            <div>
+              <span class="font-bold text-gray-800 text-lg">{{ index + 1 }}.</span>
+              <span class="ml-3 text-gray-700">{{ entry.date }}</span>
+              <span class="ml-2 text-gray-500 text-sm">{{ entry.timeOfDay }}</span>
+            </div>
+            <div class="text-right">
+              <span class="font-semibold text-purple-600">{{ entry.moves }} moves</span>
+              <span class="mx-2 text-gray-400">|</span>
+              <span class="font-semibold text-blue-600">{{ Math.floor(entry.time /60) }}:{{ (entry.time % 60).toString().padStart(2, '0') }}</span>
+            </div>
+          </div>
+        </div>
+        <p v-else class="text-gray-500 italic text-center py-4">No records yet.</p>
+       </div>
+
+       <!-- medium -->
+       <div class="mb-8">
+        <h3 class="text-2xl font-bold text-yellow-600 mb-3">Medium (4x4)</h3>
+        <div v-if="leaderboard.filter(e => e.difficulty === 'medium').length > 0" class="space-y-2">
+          <div
+            v-for="(entry, index) in leaderboard.filter(e => e.difficulty === 'medium')"
+            :key="index"
+            class="bg-gray-100 rounded-lg p-4 flex justify-between items-center hover:bg-gray-200 transition-colors">
+            <div>
+              <span class="font-bold text-gray-800 text-lg">{{ index + 1 }}.</span>
+              <span class="ml-3 text-gray-700">{{ entry.date }}</span>
+              <span class="ml-2 text-gray-500 text-sm">{{ entry.timeOfDay }}</span>
+            </div>
+            <div class="text-right">
+              <span class="font-semibold text-purple-600">{{ entry.moves }} moves</span>
+              <span class="mx-2 text-gray-400">|</span>
+              <span class="font-semibold text-blue-600">{{ Math.floor(entry.time /60) }}:{{ (entry.time % 60).toString().padStart(2, '0') }}</span>
+            </div>
+          </div>
+        </div>
+        <p v-else class="text-gray-500 italic text-center py-4">No records yet.</p>
+       </div>
+
+       <!-- hard -->
+       <div class="mb-8">
+        <h3 class="text-2xl font-bold text-red-600 mb-3">Hard (4x6)</h3>
+        <div v-if="leaderboard.filter(e => e.difficulty === 'hard').length > 0" class="space-y-2">
+          <div
+            v-for="(entry, index) in leaderboard.filter(e => e.difficulty === 'hard')"
+            :key="index"
+            class="bg-gray-100 rounded-lg p-4 flex justify-between items-center hover:bg-gray-200 transition-colors">
+            <div>
+              <span class="font-bold text-gray-800 text-lg">{{ index + 1 }}.</span>
+              <span class="ml-3 text-gray-700">{{ entry.date }}</span>
+              <span class="ml-2 text-gray-500 text-sm">{{ entry.timeOfDay }}</span>
+            </div>
+            <div class="text-right">
+              <span class="font-semibold text-purple-600">{{ entry.moves }} moves</span>
+              <span class="mx-2 text-gray-400">|</span>
+              <span class="font-semibold text-blue-600">{{ Math.floor(entry.time /60) }}:{{ (entry.time % 60).toString().padStart(2, '0') }}</span>
+            </div>
+          </div>
+        </div>
+        <p v-else class="text-gray-500 italic text-center py-4">No records yet.</p>
+       </div>
+    </div>
   </div>
 </div>
 </template>
@@ -154,6 +219,7 @@ interface LeaderboardEntry {
   moves: number
   time: number
   date: string
+  timeOfDay: string
 }
 
 // Game state
@@ -291,12 +357,14 @@ const checkForMatch = (): void => {
     //check if u won and stop timer
     if (cards.value.every(card => card.isMatched)) {
       stopTimer()
+      const now = new Date()
 
       addToLeaderboard({
         difficulty: difficulty.value,
         moves: moves.value,
         time: timer.value,
-        date: new Date().toLocaleDateString()
+        date: now.toLocaleDateString(),
+        timeOfDay: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       })
     }
   } else {
