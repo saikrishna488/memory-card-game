@@ -113,7 +113,14 @@
    <div
     v-if="showLeaderboard"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center jusify-center p-4 z-50"
-    @click="toggleLeaderboard">
+    @click="127
+
+         <button
+      @click="clearLeaderboard"
+      class="bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-red-600 transition-all"
+    >
+      Clear Leaderboard
+    </button>
     <div
       class="bg-white rounded-lg p-8 max-w-3xl w-full max-h-[85vh] overflow-y-auto"
       @click.stop>
@@ -427,10 +434,19 @@ const getBestScore = computed(() => {
 })
 
 //toggle leaderboard visibility
-const toggleLeaderboard = (): void => {
+const 439
+  : void => {
   showLeaderboard.value = !showLeaderboard.value
 }
 
+
+  //clear leaderboard
+const clearLeaderboard = (): void => {
+  if (confirm('Are you sure you want to clear all leaderboard records?')) {
+    leaderboard.value = []
+    saveLeaderboard()
+  }
+}
 //change difficulty
 const changeDifficulty = (newDifficulty: Difficulty): void => {
   difficulty.value = newDifficulty
